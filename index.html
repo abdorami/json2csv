@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        /*
+        Raleway Font (c) Impallari
+        https://github.com/impallari/Raleway/
+        */
+
+        @import url('https://fonts.googleapis.com/css?family=Raleway');
+
+        /*
+        EmojiSymbols Font (c) blockworks - Kenichi Kaneko
+        http://emojisymbols.com/
+        */
+
+        @font-face {
+            font-family: "EmojiSymbols";
+            src: url("EmojiSymbols-Regular.woff") format('woff');
+        }
+
+        /*--- Page Layout ---*/
+
+        .container {
+            max-width: 1280px;
+            margin: auto;
+            margin-top: 50px;
+        }
+
+        h1 {
+            margin: 10px 0px 10px 10px;
+        }
+
+        .textareas {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+        }
+
+        textarea {
+            width: 100%;
+            height: 400px;
+            margin: 7px;
+        }
+
+        /*--- Styling ---*/
+
+        h1 {
+            font-weight: lighter;
+            font-size: 40px;
+        }
+
+        body {
+            background-color: black;
+            /*
+            Shattered Island Pattern (c) Julien Renvoye
+            http://thepatternlibrary.com/#shattered-island
+            */
+            background-image: url(ShatteredIsland.gif);
+            background-position: center center;
+            font-family: 'Raleway', sans-serif;
+            font-size: 18px;
+            color: lightgray;
+        }
+
+        textarea {
+            border-radius: 2px;
+            resize: none;
+        }
+
+
+        .choices {
+            margin: 5px 0px 7px 8px;
+        }
+
+        .choices>label {
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+
+        input[type='checkbox']+label:before {
+            content: "⬛";
+            font-family: "EmojiSymbols";
+            margin-right: 8px;
+            transition-duration: 0.2s;
+        }
+
+        input[type='checkbox']:checked+label:before {
+            content: "✅";
+        }
+
+        input[type='checkbox']+label:hover {
+            color: white;
+        }
+
+        input[type='checkbox'] {
+            display: none;
+        }
+
+        input[type='file']+label {
+            display: inline-block;
+        }
+
+        input[type='file'] {
+            display: none;
+        }
+
+        label {
+            cursor: pointer;
+        }
+
+        button,
+        input[type='file']+label {
+            cursor: pointer;
+            transition-duration: 0.2s;
+            font-family: 'Raleway', sans-serif;
+            font-size: 15px;
+            text-transform: uppercase;
+            color: seashell;
+            background-color: darkslateblue;
+            border: 0;
+            border-radius: 2px;
+            margin: 0px 7px 0px 0px;
+            padding: 10px 15px;
+        }
+
+        button:hover,
+        input[type='file']+label:hover {
+            background-color: slateblue;
+        }
+
+        button:first-child {
+            margin-left: 7px;
+            background-color: seagreen;
+        }
+
+        button:first-child:hover {
+            background-color: mediumseagreen;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>JSON to CSV Converter</h1>
+        <div class="textareas">
+            <textarea id="InputText" placeholder="JSON input" autofocus></textarea>
+            <textarea id="OutputText" placeholder="CSV output" readonly></textarea>
+        </div>
+        <div class="lower">
+            <div class="choices">
+                <input type="checkbox" id="CheckColumns" checked>
+                <label for="CheckColumns">Include column names</label>
+                <br>
+                <input type="checkbox" id="CheckSort">
+                <label for="CheckSort">Sort columns</label>
+            </div>
+            <div class="buttons">
+                <button type="button" id="ConvertButton">Convert</button>
+                <input type="file" id="InputFile" />
+                <label for="InputFile">Open JSON file</label>
+                <button type="button" id="SaveButton">Save output as</button>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    // adding event listeners for responsiveness
+    window.onload = function () {
+        document.getElementById("InputText").oninput = function () { ConvertText() };
+        document.getElementById("InputText").onchange = function () { ConvertText() };
+        document.getElementById("InputText").onclick = function () { ConvertText() };
+        document.getElementById("InputText").onfocus = function () { ConvertText() };
+        document.getElementById("InputFile").oninput = function () { ReadFile() };
+        document.getElementById("SaveButton").onclick = function () { SaveText() };
+        document.getElementById("ConvertButton").onclick = function () { ConvertText() };
+        document.getElementById("CheckColumns").onclick = function () { ConvertText() };
+        document.getElementById("CheckSort").onclick = function () { ConvertText() };
+    }
+
+    // input file reader
+    function ReadFile() {
+        // check browser compatibility
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            // fetch input file
+            var fileToRead = document.getElementById('InputFile').files[0];
+            if (fileToRead == undefined);
+            else {
+                // check file size
+                if (fileToRead.size > 1048576) window.alert("Your file must be under 1 MB");
+                else {
+                    // start reading local file
+                    var fileReader = new FileReader();
+                    fileReader.onload = function (e) {
+                        document.getElementById("InputText").value = fileReader.result;
+                    }
+                    fileReader.readAsText(fileToRead);
+                    document.getElementById("OutputText").innerHTML = "";
+                    document.getElementById("OutputText").placeholder = "When your file is fully loaded in the input text area, click the convert button.";
+                }
+            }
+        }
+        else window.alert("Your browser does not support this action");
+    }
+
+    // output CSV saver
+    function SaveText() {
+        // check browser compatibility
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            // fetch output text
+            var blob = new Blob([document.getElementById("OutputText").value], { type: "text/csv;charset=utf-8" });
+            // create temporary save link
+            var tempA = document.createElement("a");
+            tempA.download = "output.csv";
+            tempA.href = URL.createObjectURL(blob);
+            document.body.appendChild(tempA);
+            // open "Save as..." dialog
+            tempA.click();
+            document.body.removeChild(tempA);
+        }
+        else window.alert("Your browser does not support this action");
+    }
+
+    // input JSON converter
+    function ConvertText() {
+        // checkboxes
+        var c = document.getElementById("CheckColumns").checked;
+        var s = document.getElementById("CheckSort").checked;
+        // input string
+        var w = (document.getElementById("InputText").value).replace(/\n/g, "");
+        // temp strings
+        var x = w.replace(JExp2, "");
+        var y = "";
+        // array of column names
+        var attrib = [];
+        // number of valid records
+        var rec = 0;
+        // output string
+        var out = "";
+        // regex for valid JSON record
+        // { "a":"b" , "a":b , "a":[b,c] , "a":"\"b\"" }
+        var JExp1 = /{\s*"[^\n",]+"\s*:\s*("\\"[^"\n]+\\""|"[^"\n]+"|\[[^"{}\n]+\]|[^",\n]+)(\s*,\s*"[^\n",]+"\s*:\s*("\\"[^"\n]+\\""|"[^"\n]+"|\[[^"{}\n]+\]|[^",\n]+))*\s*}/i;
+        // regex for empty JSON record
+        // {"a":} & {"a":[ ]} & {"a":[ , ]}
+        var JExp2 = /{\s*".+"\s*:\s*\[\s*(,\s*)*\]\s*}|{\s*".+"\s*:[\s,]*}/i;
+
+        // generate columns
+        while (JExp1.test(x)) {
+            y = JExp1.exec(x)[0];
+            try { var obj = JSON.parse(y); }
+            catch (err) { console.log(err); console.log(y); }
+            for (i = 0; i < Object.keys(obj).length; i++) {
+                var z = Object.keys(obj)[i];
+                if (attrib.indexOf(z) == -1)
+                    attrib.push(z);
+            }
+            x = x.replace(JExp1, "");
+            x = x.replace(JExp2, "");
+        }
+        if (s) attrib.sort();
+        if (c) out = attrib + "\n";
+
+        // remove empty records
+        x = w.replace(JExp2, "");
+
+        // generate records
+        while (JExp1.test(x)) {
+            y = JExp1.exec(x)[0];
+            try { var obj = JSON.parse(y); }
+            catch (err) { console.log(err); console.log(y); }
+            for (i = 0; i < attrib.length; i++) {
+                for (j = 0; j < Object.keys(obj).length; j++) {
+                    var z = obj[Object.keys(obj)[j]] + "";
+                    if (Object.keys(obj)[j] == attrib[i]) {
+                        if (z.includes(",")) out += "\"" + z + "\"";
+                        else out += z;
+                        break;
+                    }
+                }
+                out += ",";
+            }
+            out = out.substring(0, out.length - 1) + "\n";
+            rec++;
+            x = x.replace(JExp1, "");
+            x = x.replace(JExp2, "");
+        }
+        out = out.substring(0, out.length - 1);
+
+        // output
+        document.getElementById("OutputText").innerHTML = out;
+        document.getElementById("OutputText").placeholder = "CSV output";
+    }
+</script>
+
+</html>
